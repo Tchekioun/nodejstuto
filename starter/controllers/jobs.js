@@ -9,6 +9,9 @@ const getAllJobs = async (req, res) => {
 const getJob = async (req, res) => {
   const { user:{ userId }, params: {id:jobId}} = req
   const job = await Job.findOne({ createdBy: userId, _id: jobId })
+  if (!job) {
+    throw new NotFoundError(`No job with id: ${jobId}`)
+  }
   res.status(StatusCodes.OK).json({job})
 }
 const createJob = async (req, res) => {
@@ -24,10 +27,15 @@ const updateJob = async (req, res) => {
     throw new BadRequestError('please privde company and position')
   }
   const job = await Job.findOneAndUpdate({ _id: jobId, createdBy: userId }, req.body, {new:true, runValidators:true})
-  res.send('update job')
 }
 const deleteJob = async (req, res) => {
-  res.send('delete job')
+  const { user: { userId },
+    params: { id: jobId } } = req;
+  const job = await Job.findByIdAndRemove({ _id: jobId, createdBy: userId })
+  if (!job) {
+    throw new NotFoundError(`No job with id: ${jobId}`)
+  }
+  res.status(StatusCodes.OK).send()
 }
 
 module.exports = {
